@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "expressive"
+version = "0.0.1.dev"
+description = "Expressive"
+authors = ["Ben Avrahami"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/bentheiii/expressive"
+packages = [
+    {include='expressive'}
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+flake8 = { version = "*", allow-prereleases = true }
+pytest-cov = "*"
+sphinx = "*"
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"
+

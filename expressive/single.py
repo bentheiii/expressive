@@ -25,7 +25,7 @@ class SingleParamExpression(ABC):
         pass
 
     def __getattr__(self, item):
-        if item.startswith('_') and not item.endswith('_'):
+        if item.startswith('__') and not item.endswith('_'):
             raise AttributeError(item)
         return GetAttr(self, item)
 
@@ -45,12 +45,6 @@ class SingleParamExpression(ABC):
                          (matmul, '@'),
                          (lshift, '<<'),
                          (rshift, '>>'),
-                         (ge, '>='),
-                         (gt, '>'),
-                         (le, '<='),
-                         (lt, '<'),
-                         (eq, '=='),
-                         (ne, '!='),
                          (or_, '|'),
                          (and_, '&'),
                          (xor, '^'),):
@@ -61,6 +55,19 @@ class SingleParamExpression(ABC):
                 return BinOp({op_str!r},{op}, self, other)
             def __r{op_name}__(self, other):
                 return BinOp({op_str!r},{op}, other, self)
+        """))
+
+    for b_op, op_str in ((ge, '>='),
+                         (gt, '>'),
+                         (le, '<='),
+                         (lt, '<'),
+                         (eq, '=='),
+                         (ne, '!='),):
+        op = b_op.__name__
+        op_name = op.strip('_')
+        exec(dedent(f"""
+            def __{op_name}__(self, other):
+                return BinOp({op_str!r},{op}, self, other)
         """))
 
     for u_op, op_str in ((invert, '~'),
@@ -254,11 +261,17 @@ def evaluate(self, v):
 
 
 class _Evaluated:
-    def __init__(self, spe: SingleParamExpression):
+    def __init__(self, spe):
         self.spe = spe
 
     def __call__(self, v):
         return evaluate(self.spe, v)
+
+
+def e(spe):
+    if isinstance(spe, _Evaluated):
+        return spe
+    return _Evaluated(spe)
 
 
 def is_expression(v):
@@ -266,4 +279,3 @@ def is_expression(v):
 
 
 _ = _Parameter()
-e = _Evaluated

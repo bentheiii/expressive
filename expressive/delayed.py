@@ -1,7 +1,7 @@
 from math import floor, ceil, trunc
 from operator import pow, not_, abs, index, length_hint, is_
 
-from expressive.single import Const
+from expressive.single import Const, evaluate, SingleParamExpression, _eq_
 
 __all__ = [
     'Abs', 'All', 'Any', 'Ascii',
@@ -12,7 +12,7 @@ __all__ = [
     'Filter', 'Float', 'Floor', 'Format', 'FrozenSet',
     'GetAttr',
     'HasAttr', 'Hash', 'Hex',
-    'Id', 'In', 'Index', 'Int', 'Is', 'IsInstance', 'IsSubclass', 'Iter',
+    'Id', 'If', 'In', 'Index', 'Int', 'Is', 'IsInstance', 'IsSubclass', 'Iter',
     'Len', 'LengthHint', 'List',
     'Map', 'Max', 'MemoryView', 'Min',
     'Next', 'Not',
@@ -89,3 +89,24 @@ Tuple = Const(tuple, 'Tuple')
 Type = Const(type, 'Type')
 Vars = Const(vars, 'Vars')
 Zip = Const(zip, 'Zip')
+
+
+class If(SingleParamExpression):
+    def __init__(self, then, condition, otherwise):
+        self.__then = then
+        self.__condition = condition
+        self.__otherwise = otherwise
+
+    def _evaluate(self, v):
+        if evaluate(self.__condition, v):
+            return evaluate(self.__then, v)
+        return evaluate(self.__otherwise, v)
+
+    def _eq(self, other) -> bool:
+        return type(self) is type(other) \
+               and _eq_(self.__condition, other.__condition) \
+               and _eq_(self.__then, other.__then) \
+               and _eq_(self.__otherwise, other.__otherwise)
+
+    def __repr__(self):
+        return f'If({self.__then!r}, {self.__condition!r}, {self.__otherwise!r})'

@@ -1,4 +1,5 @@
 from collections import ChainMap, Counter
+from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import NamedTuple
 
@@ -48,7 +49,22 @@ class Point(NamedTuple):
     y: int
 
 
-@mark.parametrize('v', [1, 3, 8, True, 'hi', '', 'hello', [1, 2, 3, 'gy'], 1.5, 1.0, {'a': 1, 'b': 2}, {}])
+@dataclass
+class Point3:
+    x: int
+    y: int
+    z: int
+
+
+@dataclass(frozen=True)
+class Point3F:
+    x: int
+    y: int
+    z: int
+
+
+@mark.parametrize('v', [1, 3, 8, True, 'hi', '', 'hello', [1, 2, 3, 'gy'],
+                        1.5, 1.0, {'a': 1, 'b': 2}, {}, 0, -1.0, None])
 @mark.parametrize('ex, lam', [
     (_, lambda x: x),
     (_ + _, lambda x: x + x),
@@ -75,7 +91,9 @@ class Point(NamedTuple):
     (If('yes', _, 'no'), lambda x: 'yes' if x else 'no'),
     (ChainMap({'x': 1}, _), lambda x: ChainMap({'x': 1}, x)),
     (Counter(a=_), lambda x: Counter(a=x)),
-    (Point(_, _), lambda x: Point(x, x))
+    (Point(_, _), lambda x: Point(x, x)),
+    (Point3(_, _, _), lambda x: Point3(x, x, x)),
+    (Point3F(_, _, _), lambda x: Point3F(x, x, x)),
 ])
 def test_op(v, ex, lam):
     evaled = eval(repr(ex))

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import ChainMap, Counter
+from dataclasses import is_dataclass, fields
 from functools import singledispatch
 from itertools import starmap
 from math import floor, ceil, trunc
@@ -20,6 +21,12 @@ def _eq_(a, b):
         return b._eq(a)
     if not (is_possible_expression(a) or is_possible_expression(b)):
         return a == b
+    if hasattr(a, '_fields') and hasattr(b, '_fields'):
+        return type(a) is type(b) \
+               and _eq_(
+            [getattr(a, field) for field in a._fields],
+            [getattr(b, field) for field in b._fields],
+        )
     if isinstance(a, ChainMap) and isinstance(b, ChainMap):
         return type(a) is type(b) and _eq_(a.maps, b.maps)
     if isinstance(a, Mapping) and isinstance(b, Mapping):
@@ -270,6 +277,18 @@ def _evaluate_by_element(self: Iterable, v) -> Optional[list]:
 
 @singledispatch
 def evaluate(self, v):
+    field_names = None
+
+    if is_dataclass(self) and not isinstance(self, type):
+        field_names = [f.name for f in fields(self)]
+    elif hasattr(self, '_fields'):
+        field_names = self._fields
+
+    if field_names:
+        values = [getattr(self, field) for field in field_names]
+        args = _evaluate_by_element(values, v)
+        return type(self)(**dict(zip(field_names, args))) if args else self
+
     return self
 
 
@@ -350,7 +369,9 @@ def e(spe):
 
 
 def is_possible_expression(v):
-    return evaluate.dispatch(type(v)) != evaluate.dispatch(object)
+    return evaluate.dispatch(type(v)) != evaluate.dispatch(object) \
+           or hasattr(v, '_fields') \
+           or (is_dataclass(v) and not isinstance(v, type))
 
 
 def is_expression(v):

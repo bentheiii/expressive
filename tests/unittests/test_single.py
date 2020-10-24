@@ -100,3 +100,14 @@ def test_op(v, ex, lam):
     assert _eq_(ex, evaled)
     ex = e(ex)
     equivalent(v, lam, ex)
+
+
+def as_method():
+    @dataclass
+    class A:
+        x: int
+
+        sq = e(_.x ** 2)
+
+    a = A(12)
+    assert a.sq() == 144
